@@ -31,8 +31,6 @@ CONFIGS[multimedia]="vlc audacity ffmpeg mpv gimp "
 CONFIGS[git]="git git-lfs"
 CONFIGS[latex]="texlive texlive-latex-extra texlive-science texlive-lang-german texlive-lang-english"
 CONFIGS[communications]="signal-desktop telegram-desktop discord pidgin pidgin-otr"
-
-# Gaming configuration
 CONFIGS[gaming]="steam steam-native-runtime lutris wine-staging winetricks vulkan-icd-loader"
 CONFIGS[audio]="audacity reaper ardour audacious jack2 helm"
 CONFIGS[video]="kdenlive blender ffmpeg openshot openshot-blender-git vlc"
