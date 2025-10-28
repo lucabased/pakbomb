@@ -12,7 +12,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Remote script URL
-SCRIPT_URL="https://dist.lucabased.xyz/pakbomb.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/lucabased/pakbomb/refs/heads/main/pakbomb.sh"
 
 # Package configurations
 declare -A CONFIGS
