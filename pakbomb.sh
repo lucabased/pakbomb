@@ -1,8 +1,6 @@
 #!/bin/bash
-
 # pakbomb.sh - Package installer for common tool sets
 # Usage: pakbomb.sh <config_name>
-
 set -e
 
 # Color codes
@@ -10,7 +8,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# Remote script URL
+SCRIPT_URL="https://dist.lucabased.xyz/pakbomb.sh"
 
 # Package configurations
 declare -A CONFIGS
@@ -265,7 +267,151 @@ function install_packages() {
     print_success "Installation complete!"
 }
 
+function check_for_updates() {
+    local script_path="$0"
+    local remote_url="$SCRIPT_URL"
+    
+    # Only check for updates if we have curl or wget
+    if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
+        print_info "Skipping update check (curl/wget not available)"
+        return 0
+    fi
+    
+    # Get local script's hash
+    local local_hash=$(sha256sum "$script_path" 2>/dev/null | awk '{print $1}')
+    
+    if [ -z "$local_hash" ]; then
+        return 0
+    fi
+    
+    # Get remote script's hash (download temporarily)
+    local temp_remote=$(mktemp)
+    local download_success=false
+    
+    if command -v curl &> /dev/null; then
+        if curl -sSL "$remote_url" -o "$temp_remote" 2>/dev/null; then
+            download_success=true
+        fi
+    elif command -v wget &> /dev/null; then
+        if wget -qO "$temp_remote" "$remote_url" 2>/dev/null; then
+            download_success=true
+        fi
+    fi
+    
+    if [ "$download_success" = false ]; then
+        rm -f "$temp_remote"
+        return 0
+    fi
+    
+    # Verify the downloaded content is actually the script
+    if ! grep -q "install_with" "$temp_remote" 2>/dev/null; then
+        rm -f "$temp_remote"
+        return 0
+    fi
+    
+    local remote_hash=$(sha256sum "$temp_remote" 2>/dev/null | awk '{print $1}')
+    
+    # Clean up temp file
+    rm -f "$temp_remote"
+    
+    if [ -z "$remote_hash" ]; then
+        return 0
+    fi
+    
+    # Compare hashes
+    if [ "$local_hash" != "$remote_hash" ]; then
+        return 1  # Update available
+    fi
+    
+    return 0  # No update needed
+}
+
+function download_update() {
+    local script_path="$0"
+    local remote_url="$SCRIPT_URL"
+    local backup_script="${script_path}.bak"
+    
+    # Download the update to a temporary file
+    local temp_update=$(mktemp)
+    local download_success=false
+    
+    echo -e "${CYAN}Downloading update...${NC}"
+    
+    if command -v curl &> /dev/null; then
+        if curl -sSL "$remote_url" -o "$temp_update" 2>/dev/null; then
+            download_success=true
+        fi
+    elif command -v wget &> /dev/null; then
+        if wget -qO "$temp_update" "$remote_url" 2>/dev/null; then
+            download_success=true
+        fi
+    fi
+    
+    if [ "$download_success" = false ]; then
+        print_error "Failed to download update"
+        rm -f "$temp_update"
+        return 1
+    fi
+    
+    # Verify the downloaded content is actually the script
+    if ! grep -q "install_with" "$temp_update" 2>/dev/null; then
+        print_error "Verification failed: Downloaded content does not appear to be the pakbomb script"
+        rm -f "$temp_update"
+        return 1
+    fi
+    
+    # Create a backup
+    cp "$script_path" "$backup_script"
+    
+    # Replace the script
+    chmod +x "$temp_update"
+    mv "$temp_update" "$script_path"
+    
+    print_success "Script updated successfully!"
+    echo -e "${YELLOW}Backup saved to: $backup_script${NC}"
+    
+    return 0
+}
+
+function auto_update() {
+    # check_for_updates returns 0 if no update needed, 1 if update is available
+    # In bash: 0 = success/true, non-zero = failure/false
+    if check_for_updates; then
+        return 0  # No update needed, exit early
+    fi
+    
+    # If we reach here, an update is available (check_for_updates returned 1)
+    
+    echo -e "\n${CYAN}══════════════════════════════════════${NC}"
+    echo -e "${CYAN}    A U T O - U P D A T E R${NC}"
+    echo -e "${CYAN}══════════════════════════════════════${NC}"
+    echo -e "${YELLOW}A new version of pakbomb.sh is available!${NC}"
+    echo -e "${YELLOW}Would you like to update now? (y/N)${NC}"
+    echo -e "${CYAN}Press Ctrl+C to skip update and continue${NC}"
+    echo -e "${CYAN}══════════════════════════════════════${NC}"
+    
+    read -t 10 -p "$(echo -e ${YELLOW}'Enter your choice: '${NC})" response 2>/dev/null || response=""
+    
+    echo ""
+    
+    case "$response" in
+        [yY]|[yY][eE][sS])
+            if download_update; then
+                echo -e "${GREEN}Restarting script with new version...${NC}\n"
+                exec "$0" "$@"
+            else
+                echo -e "${RED}Update failed. Continuing with current version.${NC}\n"
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}Skipping update. Continuing with current version.${NC}\n"
+            ;;
+    esac
+}
+
 function main() {
+    # Check for updates before proceeding
+    auto_update
     if [ $# -eq 0 ]; then
         print_header
         show_available_configs
