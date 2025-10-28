@@ -11,6 +11,12 @@ A powerful CLI tool for installing multiple packages at once using predefined co
 - 🎨 Beautiful colored output
 - ⚡ Fast and efficient
 
+## Installation (one-liner)
+```bash
+sudo curl -o /usr/local/bin/pakbomb.sh https://raw.githubusercontent.com/lucabased/pakbomb/refs/heads/main/pakbomb.sh && sudo chmod +x /usr/local/bin/pakbomb.sh && echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+```
+/usr/local/bin is now in your PATH and pakbomb.sh can be run from anywhere.
+
 ## Usage
 
 ```bash
@@ -52,7 +58,7 @@ Installs: fail2ban, ufw, unattended-upgrades
 ```bash
 sudo ./pakbomb.sh dev
 ```
-Installs: git, vim, code, python, python-pip, nodejs, npm
+Installs: git, vim, code, python, python-pip, nodejs, npm, rust
 
 ### Security Tools
 ```bash

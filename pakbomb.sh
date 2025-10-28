@@ -15,32 +15,34 @@ NC='\033[0m' # No Color
 # Package configurations
 declare -A CONFIGS
 
-# Docker configuration
+# Containerization configuration
 CONFIGS[docker]="docker docker-compose docker-compose-plugin"
-
-# Kubernetes configuration
 CONFIGS[kubernetes]="kubectl minikube helm"
-
-# Kubernetes (alternative)
 CONFIGS[k8s]="kubectl minikube helm"
 
-# Hardening configuration
+# Hardening configuration (Basic Security)
 CONFIGS[hardening]="fail2ban ufw unattended-upgrades"
 
-# Development configuration
-CONFIGS[dev]="git vim code python python-pip nodejs npm"
+# Development configuration (Python, Rust, Node.js, etc.)
+DEV_PYTHON_PACKAGES="python python-pip python-virtualenv python3-virtualenv python3 python3-pip"
+CONFIGS[dev]="git vim nodejs npm rustup rust $PYTHON_PACKAGES"
 
-# Security configuration
-CONFIGS[security]="fail2ban ufw rkhunter clamav"
+# Extended FOSS Security // Anti-Virus and Firewall
+CONFIGS[avfw]="fail2ban ufw rkhunter clamav"
 
-# Web development configuration
-CONFIGS[webdev]="nodejs npm code git"
 
 # System tools configuration
-CONFIGS[systools]="htop tree wget curl neofetch"
+CONFIGS[systools]="cryptsetup htop tree wget curl neofetch ripgrep bat exa fzf git dnsutils jq zip tmux gnupg unzip net-tools lsof ncdu build-essential rsync loc ate nmap"
+
+# Multimedia configuration
+CONFIGS[multimedia]="vlc audacity ffmpeg mpv gimp "
 
 # Git configuration
 CONFIGS[git]="git git-lfs"
+
+# Latex
+CONFIGS[latex]="texlive texlive-latex-extra texlive-science texlive-lang-german texlive-lang-english"
+
 
 function print_header() {
     echo -e "${BLUE}"
