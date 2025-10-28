@@ -119,14 +119,36 @@ function install_with_pacman() {
         return 1
     fi
     
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
     for package in $packages; do
         if pacman -Qi "$package" &> /dev/null; then
             print_success "$package is already installed"
+            ((existing_count++))
+            existing_list="${existing_list}  - $package\n"
         else
             print_info "Installing $package..."
-            pacman -S --noconfirm "$package" && print_success "Installed $package" || print_error "Failed to install $package"
+            if pacman -S --noconfirm "$package"; then
+                print_success "Installed $package"
+                ((installed_count++))
+                installed_list="${installed_list}  - $package\n"
+            else
+                print_error "Failed to install $package"
+                ((failed_count++))
+                failed_list="${failed_list}  - $package\n"
+            fi
         fi
     done
+    
+    # Return statistics via file descriptor 3
+    echo "INSTALLED:${installed_count}:${installed_list}" >&3
+    echo "EXISTING:${existing_count}:${existing_list}" >&3
+    echo "FAILED:${failed_count}:${failed_list}" >&3
 }
 
 function install_with_apt() {
@@ -145,14 +167,37 @@ function install_with_apt() {
     fi
     
     apt-get update
+    
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
     for package in $packages; do
         if dpkg -l | grep -q "^ii  $package "; then
             print_success "$package is already installed"
+            ((existing_count++))
+            existing_list="${existing_list}  - $package\n"
         else
             print_info "Installing $package..."
-            apt-get install -y "$package" && print_success "Installed $package" || print_error "Failed to install $package"
+            if apt-get install -y "$package"; then
+                print_success "Installed $package"
+                ((installed_count++))
+                installed_list="${installed_list}  - $package\n"
+            else
+                print_error "Failed to install $package"
+                ((failed_count++))
+                failed_list="${failed_list}  - $package\n"
+            fi
         fi
     done
+    
+    # Return statistics via file descriptor 3
+    echo "INSTALLED:${installed_count}:${installed_list}" >&3
+    echo "EXISTING:${existing_count}:${existing_list}" >&3
+    echo "FAILED:${failed_count}:${failed_list}" >&3
 }
 
 function install_with_dnf() {
@@ -170,14 +215,36 @@ function install_with_dnf() {
         return 1
     fi
     
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
     for package in $packages; do
         if rpm -q "$package" &> /dev/null; then
             print_success "$package is already installed"
+            ((existing_count++))
+            existing_list="${existing_list}  - $package\n"
         else
             print_info "Installing $package..."
-            dnf install -y "$package" && print_success "Installed $package" || print_error "Failed to install $package"
+            if dnf install -y "$package"; then
+                print_success "Installed $package"
+                ((installed_count++))
+                installed_list="${installed_list}  - $package\n"
+            else
+                print_error "Failed to install $package"
+                ((failed_count++))
+                failed_list="${failed_list}  - $package\n"
+            fi
         fi
     done
+    
+    # Return statistics via file descriptor 3
+    echo "INSTALLED:${installed_count}:${installed_list}" >&3
+    echo "EXISTING:${existing_count}:${existing_list}" >&3
+    echo "FAILED:${failed_count}:${failed_list}" >&3
 }
 
 function install_with_yum() {
@@ -195,14 +262,36 @@ function install_with_yum() {
         return 1
     fi
     
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
     for package in $packages; do
         if rpm -q "$package" &> /dev/null; then
             print_success "$package is already installed"
+            ((existing_count++))
+            existing_list="${existing_list}  - $package\n"
         else
             print_info "Installing $package..."
-            yum install -y "$package" && print_success "Installed $package" || print_error "Failed to install $package"
+            if yum install -y "$package"; then
+                print_success "Installed $package"
+                ((installed_count++))
+                installed_list="${installed_list}  - $package\n"
+            else
+                print_error "Failed to install $package"
+                ((failed_count++))
+                failed_list="${failed_list}  - $package\n"
+            fi
         fi
     done
+    
+    # Return statistics via file descriptor 3
+    echo "INSTALLED:${installed_count}:${installed_list}" >&3
+    echo "EXISTING:${existing_count}:${existing_list}" >&3
+    echo "FAILED:${failed_count}:${failed_list}" >&3
 }
 
 function install_with_zypper() {
@@ -220,14 +309,36 @@ function install_with_zypper() {
         return 1
     fi
     
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
     for package in $packages; do
         if zypper se -i "$package" &> /dev/null; then
             print_success "$package is already installed"
+            ((existing_count++))
+            existing_list="${existing_list}  - $package\n"
         else
             print_info "Installing $package..."
-            zypper install -y "$package" && print_success "Installed $package" || print_error "Failed to install $package"
+            if zypper install -y "$package"; then
+                print_success "Installed $package"
+                ((installed_count++))
+                installed_list="${installed_list}  - $package\n"
+            else
+                print_error "Failed to install $package"
+                ((failed_count++))
+                failed_list="${failed_list}  - $package\n"
+            fi
         fi
     done
+    
+    # Return statistics via file descriptor 3
+    echo "INSTALLED:${installed_count}:${installed_list}" >&3
+    echo "EXISTING:${existing_count}:${existing_list}" >&3
+    echo "FAILED:${failed_count}:${failed_list}" >&3
 }
 
 function show_available_configs() {
@@ -239,6 +350,52 @@ function show_available_configs() {
         done
         echo
     done
+}
+
+function print_summary() {
+    local installed_count="$1"
+    local existing_count="$2"
+    local failed_count="$3"
+    local installed_list="$4"
+    local existing_list="$5"
+    local failed_list="$6"
+    
+    echo ""
+    echo -e "${CYAN}╔════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║        I N S T A L L A T I O N    ║${NC}"
+    echo -e "${CYAN}║            S U M M A R Y           ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════╝${NC}"
+    echo ""
+    
+    # Installed packages
+    if [ "$installed_count" -gt 0 ]; then
+        echo -e "${GREEN}✓ Installed ($installed_count):${NC}"
+        echo -e "$installed_list"
+    fi
+    
+    # Already installed packages
+    if [ "$existing_count" -gt 0 ]; then
+        echo -e "${YELLOW}→ Already installed ($existing_count):${NC}"
+        echo -e "$existing_list"
+    fi
+    
+    # Failed packages
+    if [ "$failed_count" -gt 0 ]; then
+        echo -e "${RED}✗ Failed ($failed_count):${NC}"
+        echo -e "$failed_list"
+    fi
+    
+    # Total summary
+    echo ""
+    echo -e "${BLUE}Total packages processed:${NC} $((installed_count + existing_count + failed_count))"
+    echo -e "${GREEN}Successfully installed:${NC} $installed_count"
+    echo -e "${YELLOW}Already installed:${NC} $existing_count"
+    
+    if [ "$failed_count" -gt 0 ]; then
+        echo -e "${RED}Failed to install:${NC} $failed_count"
+    fi
+    
+    echo ""
 }
 
 function install_packages() {
@@ -261,21 +418,32 @@ function install_packages() {
     print_info "Detected package manager: $pkg_manager"
     echo ""
     
+    # Create a pipe for capturing statistics from fd 3
+    local stats_file=$(mktemp)
+    
+    local installed_count=0
+    local existing_count=0
+    local failed_count=0
+    local installed_list=""
+    local existing_list=""
+    local failed_list=""
+    
+    # Execute installation with fd 3 redirected to the stats file
     case "$pkg_manager" in
         pacman)
-            install_with_pacman "$packages"
+            install_with_pacman "$packages" 3>"$stats_file"
             ;;
         apt)
-            install_with_apt "$packages"
+            install_with_apt "$packages" 3>"$stats_file"
             ;;
         dnf)
-            install_with_dnf "$packages"
+            install_with_dnf "$packages" 3>"$stats_file"
             ;;
         yum)
-            install_with_yum "$packages"
+            install_with_yum "$packages" 3>"$stats_file"
             ;;
         zypper)
-            install_with_zypper "$packages"
+            install_with_zypper "$packages" 3>"$stats_file"
             ;;
         *)
             print_error "Unsupported package manager: $pkg_manager"
@@ -284,8 +452,21 @@ function install_packages() {
             ;;
     esac
     
+    # Extract statistics from the file
+    installed_count=$(grep "^INSTALLED:" "$stats_file" | cut -d: -f2)
+    installed_list=$(grep "^INSTALLED:" "$stats_file" | cut -d: -f3-)
+    
+    existing_count=$(grep "^EXISTING:" "$stats_file" | cut -d: -f2)
+    existing_list=$(grep "^EXISTING:" "$stats_file" | cut -d: -f3-)
+    
+    failed_count=$(grep "^FAILED:" "$stats_file" | cut -d: -f2)
+    failed_list=$(grep "^FAILED:" "$stats_file" | cut -d: -f3-)
+    
+    # Clean up
+    rm -f "$stats_file"
+    
     echo ""
-    print_success "Installation complete!"
+    print_summary "$installed_count" "$existing_count" "$failed_count" "$installed_list" "$existing_list" "$failed_list"
 }
 
 function get_update_info() {
