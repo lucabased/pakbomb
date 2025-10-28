@@ -17,33 +17,54 @@ SCRIPT_URL="https://raw.githubusercontent.com/lucabased/pakbomb/refs/heads/main/
 # Package configurations
 declare -A CONFIGS
 
-# Containerization configuration
 CONFIGS[docker]="docker docker-compose docker-compose-plugin"
 CONFIGS[kubernetes]="kubectl minikube helm"
 CONFIGS[k8s]="kubectl minikube helm"
-
-# Hardening configuration (Basic Security)
 CONFIGS[hardening]="fail2ban ufw unattended-upgrades"
-
 # Development configuration (Python, Rust, Node.js, etc.)
 DEV_PYTHON_PACKAGES="python python-pip python-virtualenv python3-virtualenv virtualenv python3 python3-pip"
 CONFIGS[dev]="git vim nodejs npm rustup rust $PYTHON_PACKAGES"
-
 # Extended FOSS Security // Anti-Virus and Firewall
 CONFIGS[avfw]="fail2ban ufw rkhunter clamav"
-
-
-# System tools configuration
 CONFIGS[systools]="cryptsetup htop tree wget curl neofetch ripgrep bat exa fzf git dnsutils jq zip tmux gnupg unzip net-tools lsof ncdu build-essential rsync loc ate nmap"
-
-# Multimedia configuration
 CONFIGS[multimedia]="vlc audacity ffmpeg mpv gimp "
-
-# Git configuration
 CONFIGS[git]="git git-lfs"
-
-# Latex
 CONFIGS[latex]="texlive texlive-latex-extra texlive-science texlive-lang-german texlive-lang-english"
+CONFIGS[communications]="signal-desktop telegram-desktop discord pidgin pidgin-otr"
+
+# Gaming configuration
+CONFIGS[gaming]="steam steam-native-runtime lutris wine-staging winetricks vulkan-icd-loader"
+CONFIGS[audio]="audacity reaper ardour audacious jack2 helm"
+CONFIGS[video]="kdenlive blender ffmpeg openshot openshot-blender-git vlc"
+CONFIGS[editing]="kdenlive blender ffmpeg openshot openshot-blender-git gimp inkscape"
+CONFIGS[network]="wireshark-qt tcpdump nmap netcat nethogs iftop vnstat net-tools"
+CONFIGS[vpn]="openvpn wireguard-tools networkmanager-openvpn networkmanager-wireguard"
+CONFIGS[passman]="keepassxc pass"
+CONFIGS[email]="thunderbird evolution"
+CONFIGS[office]="libreoffice-fresh libreoffice-fresh-de libreoffice-lang-de thunderbird"
+CONFIGS[sci]="octave gnuplot gnuradio gnuradio-companion python-scipy python-numpy python-matplotlib"
+CONFIGS[science]="octave gnuplot gnuradio gnuradio-companion python-scipy python-numpy python-matplotlib"
+CONFIGS[iot]="arduino-cli platformio cmake ninja gcc-avr avr-libc"
+CONFIGS[embedded]="arduino-cli platformio cmake ninja gcc-avr avr-libc"
+CONFIGS[cloud]="aws-cli azure-cli google-cloud-sdk terraform ansible"
+CONFIGS[aws]="aws-cli terraform"
+CONFIGS[terraform]="terraform ansible packer vault"
+CONFIGS[shell]="neovim zsh oh-my-zsh-git tmux fzf ripgrep bat exa fd zoxide starship"
+CONFIGS[productivity]="neovim zsh oh-my-zsh-git tmux fzf ripgrep bat exa fd zoxide starship"
+CONFIGS[build]="gcc gcc-fortran clang cmake ninja make meson bazel"
+CONFIGS[compiler]="gcc gcc-fortran clang cmake ninja make meson"
+CONFIGS[golang]="go gopls"
+CONFIGS[java]="jdk-openjdk maven gradle"
+CONFIGS[rust-dev]="rust rustup cargo"
+CONFIGS[tex]="texlive-most texlive-lang texlive-fontsextra"
+CONFIGS[ai]="python-pytorch python-torchvision python-torchaudio python-transformers python-tensorflow"
+CONFIGS[db]="postgresql mysql mariadb mongodb-tools sqlite redis"
+CONFIGS[archive]="p7zip unrar zip unzip gzip bzip2 xz"
+CONFIGS[monitoring]="htop iotop btop glances nvtop nvidia-utils"
+CONFIGS[backup]="rsync timeshift restic borg"
+CONFIGS[virt]="qemu libvirt virt-manager virt-viewer qemu-arch-extra dnsmasq ebtables bridge-utils"
+# Testing & CI
+CONFIGS[testing]="bash-completion shellcheck shfmt"
 
 
 function print_header() {
@@ -267,13 +288,12 @@ function install_packages() {
     print_success "Installation complete!"
 }
 
-function check_for_updates() {
+function get_update_info() {
     local script_path="$0"
     local remote_url="$SCRIPT_URL"
     
     # Only check for updates if we have curl or wget
     if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
-        print_info "Skipping update check (curl/wget not available)"
         return 0
     fi
     
@@ -318,12 +338,25 @@ function check_for_updates() {
         return 0
     fi
     
-    # Compare hashes
+    # Output hashes separated by newline
+    echo "$local_hash"
+    echo "$remote_hash"
+    echo "$remote_url"
+    
+    # Return status: 1 if update available, 0 if not
     if [ "$local_hash" != "$remote_hash" ]; then
         return 1  # Update available
     fi
     
     return 0  # No update needed
+}
+
+function check_for_updates() {
+    # Get update info and check if update is available
+    local update_info=$(get_update_info)
+    
+    # get_update_info returns 1 if update is available
+    return $?
 }
 
 function download_update() {
@@ -374,18 +407,34 @@ function download_update() {
 }
 
 function auto_update() {
-    # check_for_updates returns 0 if no update needed, 1 if update is available
-    # In bash: 0 = success/true, non-zero = failure/false
-    if check_for_updates; then
+    # Get update information
+    local update_info=$(get_update_info)
+    
+    # get_update_info returns 1 if update is available, 0 if not
+    local has_update=$?
+    
+    if [ $has_update -eq 0 ]; then
         return 0  # No update needed, exit early
     fi
     
-    # If we reach here, an update is available (check_for_updates returned 1)
+    # If we reach here, an update is available
+    # Parse the update info (format: local_hash\nremote_hash\nurl)
+    local local_hash=$(echo "$update_info" | sed -n '1p')
+    local remote_hash=$(echo "$update_info" | sed -n '2p')
+    local update_url=$(echo "$update_info" | sed -n '3p')
     
     echo -e "\n${CYAN}══════════════════════════════════════${NC}"
     echo -e "${CYAN}    A U T O - U P D A T E R${NC}"
     echo -e "${CYAN}══════════════════════════════════════${NC}"
     echo -e "${YELLOW}A new version of pakbomb.sh is available!${NC}"
+    echo ""
+    echo -e "${BLUE}Update source:${NC}"
+    echo -e "  ${update_url}"
+    echo ""
+    echo -e "${BLUE}File hashes:${NC}"
+    echo -e "  ${RED}Current:${NC}  ${local_hash:0:16}..."
+    echo -e "  ${GREEN}Remote:${NC}   ${remote_hash:0:16}..."
+    echo ""
     echo -e "${YELLOW}Would you like to update now? (y/N)${NC}"
     echo -e "${CYAN}Press Ctrl+C to skip update and continue${NC}"
     echo -e "${CYAN}══════════════════════════════════════${NC}"
