@@ -13,7 +13,7 @@ A powerful CLI tool for installing multiple packages at once using predefined co
 
 ## Installation (one-liner)
 ```bash
-sudo curl -o /usr/local/bin/pakbomb.sh https://raw.githubusercontent.com/lucabased/pakbomb/refs/heads/main/pakbomb.sh && sudo chmod +x /usr/local/bin/pakbomb.sh && echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+sudo curl -o /usr/local/bin/pakbomb.sh https://dist.lucabased.xyz/pakbomb.sh && sudo chmod +x /usr/local/bin/pakbomb.sh && echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 ```
 /usr/local/bin is now in your PATH and pakbomb.sh can be run from anywhere.
 
