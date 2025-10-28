@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and application code
+COPY requirements.txt .
+COPY main.py .
+COPY pepe-cheers.gif .
+
+# Create virtual environment
+RUN python -m venv .venv && \
+    . .venv/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 5000
+
+CMD [".venv/bin/python", "main.py"]

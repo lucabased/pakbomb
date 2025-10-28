@@ -24,7 +24,7 @@ CONFIGS[k8s]="kubectl minikube helm"
 CONFIGS[hardening]="fail2ban ufw unattended-upgrades"
 
 # Development configuration (Python, Rust, Node.js, etc.)
-DEV_PYTHON_PACKAGES="python python-pip python-virtualenv python3-virtualenv python3 python3-pip"
+DEV_PYTHON_PACKAGES="python python-pip python-virtualenv python3-virtualenv virtualenv python3 python3-pip"
 CONFIGS[dev]="git vim nodejs npm rustup rust $PYTHON_PACKAGES"
 
 # Extended FOSS Security // Anti-Virus and Firewall
